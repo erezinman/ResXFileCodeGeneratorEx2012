@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
+  <Metadata>
+    <Identity Id="7a767aad-ab4f-4916-900e-1f3e8eef7a91" Version="2.7" Language="en-US" Publisher="DMK Software; EZSlaver" />
+    <DisplayName>Extended Strongly Typed Resource Generator</DisplayName>
+    <Description xml:space="preserve">This tool is the work of Dmytro Kryvko (DMK Software) - I haven't changed a thing in the extension intself. However, this extension was moved to .Net 4.5 and put into a Visual Studio Package file (.vsix). 
+This is the original description by the creator:
+
+One of the great new features of the Visual Studio .NET IDE is a custom tool called ResXFileCodeGenerator that is automatically associated with resources (*.resx files) every time they are added into a project. Whenever your project is rebuilt, a resource file is saved or a custom tool is run manually; the tool in question generates a managed class that exposes every resource you have in the *.resx file as a strongly typed static property. Now, any type of resource supported -- including images, icons, strings, etc. -- is a piece of cake to retrieve.</Description>
+    <MoreInfo>http://www.codeproject.com/Articles/13830/Extended-Strongly-Typed-Resource-Generator</MoreInfo>
+    <License>License.txt</License>
+    <ReleaseNotes>Release Notes.txt</ReleaseNotes>
+    <Icon>Resources\resx_icon.ico</Icon>
+    <Tags>resx, typed, type, resource, resources, extended, strong, public, generator, code, file</Tags>
+  </Metadata>
+  <Installation InstalledByMsi="false">
+    <InstallationTarget Version="[11.0,12.0)" Id="Microsoft.VisualStudio.Pro" />
+  </Installation>
+  <Dependencies>
+    <Dependency Id="Microsoft.Framework.NDP" DisplayName="Microsoft .NET Framework" d:Source="Manual" Version="4.5" d:InstallSource="Download" />
+    <Dependency Id="Microsoft.VisualStudio.MPF.11.0" DisplayName="Visual Studio MPF 11.0" d:Source="Installed" Version="[11.0,12.0)" d:InstallSource="Download" />
+    <!--<Dependency d:Source="Project" d:ProjectName="ResXFileCodeGeneratorEx" d:InstallSource="Embed" Location="|ResXFileCodeGeneratorEx;VSIXContainerProjectOutputGroup|" DisplayName="|ResXFileCodeGeneratorEx|" Id="|ResXFileCodeGeneratorEx;VSIXIdentifierProjectOutputGroup|" />-->
+  </Dependencies>
+  <Assets>
+    <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />
+    <Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="ResXFileCodeGeneratorEx" Path="|ResXFileCodeGeneratorEx;PkgdefProjectOutputGroup|" />
+    <!--<Asset Type="Microsoft.VisualStudio.VsPackage" d:Source="Project" d:ProjectName="%CurrentProject%" Path="|%CurrentProject%;PkgdefProjectOutputGroup|" />-->
+  </Assets>
+</PackageManifest>
