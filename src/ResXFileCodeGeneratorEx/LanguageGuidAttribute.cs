@@ -9,7 +9,7 @@ namespace DMKSoftware.CodeGenerators
 	internal class LanguageGuidAttribute : Attribute
 	{
 		#region Private Variables
-		private Guid _guid;
+		private readonly Guid _guid;
 		#endregion
 
 		#region Contruction

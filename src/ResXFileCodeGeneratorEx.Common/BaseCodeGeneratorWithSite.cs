@@ -2,67 +2,69 @@ using System;
 using System.CodeDom.Compiler;
 using System.ComponentModel;
 using System.Runtime.InteropServices;
-
 using Microsoft.VisualStudio.Designer.Interfaces;
 using Microsoft.VisualStudio.OLE.Interop;
 using Microsoft.VisualStudio.Shell;
+using IServiceProvider = Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
 
 namespace DMKSoftware.CodeGenerators
 {
     public abstract class BaseCodeGeneratorWithSite : BaseCodeGenerator, IObjectWithSite
     {
-        private static Guid _codeDomInterfaceGuid;
+        private static readonly Guid CodeDomInterfaceGuid;
+        private static readonly Guid CodeDomServiceGuid;
         private CodeDomProvider _codeDomProvider;
-        private static Guid _codeDomServiceGuid;
         private ServiceProvider _serviceProvider;
         private object _site;
 
         static BaseCodeGeneratorWithSite()
         {
-            _codeDomInterfaceGuid = new Guid("{73E59688-C7C4-4a85-AF64-A538754784C5}");
-            _codeDomServiceGuid = _codeDomInterfaceGuid;
+            CodeDomInterfaceGuid = new Guid("{73E59688-C7C4-4a85-AF64-A538754784C5}");
+            CodeDomServiceGuid = CodeDomInterfaceGuid;
         }
 
-        protected BaseCodeGeneratorWithSite()
+        protected virtual CodeDomProvider CodeProvider
         {
+            get
+            {
+                if (null == _codeDomProvider)
+                {
+                    var vsMDCodeDomProvider = (IVSMDCodeDomProvider) GetService(CodeDomServiceGuid);
+                    if (null != vsMDCodeDomProvider)
+                        _codeDomProvider = (CodeDomProvider) vsMDCodeDomProvider.CodeDomProvider;
+                }
+
+                return _codeDomProvider;
+            }
+            set
+            {
+                if (null == value)
+                    throw new ArgumentNullException();
+
+                _codeDomProvider = value;
+            }
         }
 
-        public override int DefaultExtension(out string ext)
+        private ServiceProvider SiteServiceProvider
         {
-            string defaultExtension = CodeProvider.FileExtension;
-            if (((defaultExtension != null) && (defaultExtension.Length > 0)) && (defaultExtension[0] != '.'))
-                defaultExtension = "." + defaultExtension;
+            get
+            {
+                if (null == _serviceProvider)
+                {
+                    var serviceProvider = _site as IServiceProvider;
+                    _serviceProvider = new ServiceProvider(serviceProvider);
+                }
 
-            ext = defaultExtension;
-            
-            return 0;
-        }
-
-        protected virtual ICodeGenerator GetCodeWriter()
-        {
-            CodeDomProvider codeComProvider = CodeProvider;
-            if (null != codeComProvider)
-                return codeComProvider.CreateGenerator();
-
-            return null;
-        }
-
-        protected object GetService(Guid serviceGuid)
-        {
-            return SiteServiceProvider.GetService(serviceGuid);
-        }
-
-        protected object GetService(Type serviceType)
-        {
-            return SiteServiceProvider.GetService(serviceType);
+                return _serviceProvider;
+            }
         }
 
         public virtual void GetSite(ref Guid riid, out IntPtr ppvSite)
         {
             if (null == _site)
                 throw new Win32Exception(-2147467259);
-            
-            IntPtr siteIUnknown = Marshal.GetIUnknownForObject(_site);
+
+            var siteIUnknown = Marshal.GetIUnknownForObject(_site);
             try
             {
                 Marshal.QueryInterface(siteIUnknown, ref riid, out ppvSite);
@@ -86,41 +88,34 @@ namespace DMKSoftware.CodeGenerators
             _serviceProvider = null;
         }
 
-        protected virtual CodeDomProvider CodeProvider
+        public override int DefaultExtension(out string ext)
         {
-            get
-            {
-                if (null == _codeDomProvider)
-                {
-                    IVSMDCodeDomProvider vsMDCodeDomProvider = (IVSMDCodeDomProvider)this.GetService(_codeDomServiceGuid);
-                    if (null != vsMDCodeDomProvider)
-                        _codeDomProvider = (CodeDomProvider)vsMDCodeDomProvider.CodeDomProvider;
-                }
+            var defaultExtension = CodeProvider.FileExtension;
+            if ((!string.IsNullOrEmpty(defaultExtension)) && (defaultExtension[0] != '.'))
+                defaultExtension = "." + defaultExtension;
 
-                return this._codeDomProvider;
-            }
-            set
-            {
-                if (null == value)
-                    throw new ArgumentNullException();
+            ext = defaultExtension;
 
-                _codeDomProvider = value;
-            }
+            return 0;
         }
 
-        private ServiceProvider SiteServiceProvider
+        protected virtual ICodeGenerator GetCodeWriter()
         {
-            get
-            {
-                if (null == _serviceProvider)
-                {
-                    Microsoft.VisualStudio.OLE.Interop.IServiceProvider serviceProvider = _site as Microsoft.VisualStudio.OLE.Interop.IServiceProvider;
-                    _serviceProvider = new ServiceProvider(serviceProvider);
-                }
+            var codeComProvider = CodeProvider;
+            if (null != codeComProvider)
+                return codeComProvider.CreateGenerator();
 
-                return this._serviceProvider;
-            }
+            return null;
+        }
+
+        protected object GetService(Guid serviceGuid)
+        {
+            return SiteServiceProvider.GetService(serviceGuid);
+        }
+
+        protected object GetService(Type serviceType)
+        {
+            return SiteServiceProvider.GetService(serviceType);
         }
     }
 }
-

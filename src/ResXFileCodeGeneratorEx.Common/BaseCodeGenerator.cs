@@ -1,37 +1,36 @@
 using System;
-using System.IO;
 using System.Runtime.InteropServices;
-
-using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Shell.Interop;
 
 namespace DMKSoftware.CodeGenerators
 {
     public abstract class BaseCodeGenerator : IVsSingleFileGenerator
     {
-        private string _codeFileNameSpace;
-        private string _codeFilePath;
-        private IVsGeneratorProgress _codeGeneratorProgress;
-
         protected BaseCodeGenerator()
         {
-            _codeFileNameSpace = string.Empty;
-            _codeFilePath = string.Empty;
+            FileNameSpace = string.Empty;
+            InputFilePath = string.Empty;
         }
+
+        public IVsGeneratorProgress CodeGeneratorProgress { get; private set; }
+
+        protected string FileNameSpace { get; private set; }
+
+        protected string InputFilePath { get; private set; }
 
         public abstract int DefaultExtension(out string ext);
 
-        public int Generate(string wszInputFilePath, string bstrInputFileContents, string wszDefaultNamespace, IntPtr[] pbstrOutputFileContents,
-            out uint pbstrOutputFileContentSize, IVsGeneratorProgress pGenerateProgress)
+        public int Generate(string wszInputFilePath, string bstrInputFileContents, string wszDefaultNamespace,
+                            IntPtr[] pbstrOutputFileContents,
+                            out uint pbstrOutputFileContentSize, IVsGeneratorProgress pGenerateProgress)
         {
-            if (null == bstrInputFileContents)
-                throw new ArgumentNullException(bstrInputFileContents);
+            if (null == bstrInputFileContents) throw new ArgumentNullException("bstrInputFileContents");
 
-            _codeFilePath = wszInputFilePath;
-            _codeFileNameSpace = wszDefaultNamespace;
-            _codeGeneratorProgress = pGenerateProgress;
-            
-            byte[] codeBuffer = this.GenerateCode(wszInputFilePath, bstrInputFileContents);
+            InputFilePath = wszInputFilePath;
+            FileNameSpace = wszDefaultNamespace;
+            CodeGeneratorProgress = pGenerateProgress;
+
+            var codeBuffer = GenerateCode(wszInputFilePath, bstrInputFileContents);
             if (null == codeBuffer)
             {
                 pbstrOutputFileContents[0] = IntPtr.Zero;
@@ -41,7 +40,7 @@ namespace DMKSoftware.CodeGenerators
             {
                 pbstrOutputFileContents[0] = Marshal.AllocCoTaskMem(codeBuffer.Length);
                 Marshal.Copy(codeBuffer, 0, pbstrOutputFileContents[0], codeBuffer.Length);
-                pbstrOutputFileContentSize = (uint)codeBuffer.Length;
+                pbstrOutputFileContentSize = (uint) codeBuffer.Length;
             }
 
             return 0;
@@ -51,34 +50,9 @@ namespace DMKSoftware.CodeGenerators
 
         protected virtual void GeneratorErrorCallback(int warning, uint level, string message, uint line, uint column)
         {
-            IVsGeneratorProgress vsGeneratorProgress = this.CodeGeneratorProgress;
+            var vsGeneratorProgress = CodeGeneratorProgress;
             if (null != vsGeneratorProgress)
                 NativeMethods.ThrowOnFailure(vsGeneratorProgress.GeneratorError(warning, level, message, line, column));
         }
-
-        public IVsGeneratorProgress CodeGeneratorProgress
-        {
-            get
-            {
-                return _codeGeneratorProgress;
-            }
-        }
-
-        protected string FileNameSpace
-        {
-            get
-            {
-                return _codeFileNameSpace;
-            }
-        }
-
-        protected string InputFilePath
-        {
-            get
-            {
-                return _codeFilePath;
-            }
-        }
     }
 }
-
